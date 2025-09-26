@@ -33,7 +33,7 @@ define PORT_INT_REQUIRED_STACK 64
 
 define DMA_RESERVE_SIZE 0
 
-define HAL_NO_MONITOR_THREAD
+define HAL_MONITOR_THREAD_ENABLED 0
 
 # setup a small defaults.parm
 define AP_PARAM_MAX_EMBEDDED_PARAM 512
