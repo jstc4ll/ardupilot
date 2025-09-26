@@ -41,11 +41,16 @@ class HWDef:
 
         # boolean indicating whether we have read and processed self.hwdef
         self.processed_hwdefs = False
+        # a set of files which have been processed to populate this object:
+        self.loaded_files = set()
 
         # sensor lists
         self.imu_list = []
         self.compass_list = []
         self.baro_list = []
+
+        # populate a stale defines map from define name to reason-it-is-bad
+        self.stale_defines = self.get_stale_defines()
 
     def is_int(self, str):
         '''check if a string is an integer'''
@@ -74,11 +79,19 @@ class HWDef:
             ret.append(line)
         return ret
 
+    def uses_filepath(self, filepath : str) -> bool:
+        return os.path.abspath(filepath) in self.loaded_files
+
+    def running_in_CI(self):
+        return os.getenv("GITHUB_ACTIONS") == "true"
+
     def get_numeric_board_id(self):
         '''return a numeric board ID, which may require mapping a string to a
         number via board_list.txt'''
         some_id = self.get_config('APJ_BOARD_ID')
         if some_id.isnumeric():
+            if self.running_in_CI():
+                raise ValueError(f"Numeric board ID found ({some_id}).  Your APJ_BOARD_ID must not use a number.  Change the number to be the name of the board used in Tools/AP_Bootloader/board_types.txt")  # noqa:E501
             return some_id
 
         board_types_filename = "board_types.txt"
@@ -154,9 +167,13 @@ class HWDef:
 
     def process_file(self, filename, depth=0):
         '''process a hwdef.dat file'''
+        self.progress(f"Processing {filename}")
+        self.loaded_files.add(os.path.abspath(filename))
         try:
             f = open(filename, "r")
-        except Exception:
+        except Exception as e:
+            if False:
+                raise e
             self.error("Unable to open file %s" % filename)
         for line in f.readlines():
             line = line.split('#')[0] # ensure we discard the comments
@@ -170,7 +187,6 @@ class HWDef:
                     dir = os.path.dirname(filename)
                     include_file = os.path.normpath(
                         os.path.join(dir, include_file))
-                self.progress("Including %s" % include_file)
                 self.process_file(include_file, depth+1)
             else:
                 self.process_line(line, depth)
@@ -233,7 +249,28 @@ class HWDef:
         value = ' '.join(a[2:])
         self.env_vars[name] = value
 
+    def get_stale_defines(self):
+        '''returns a map with a stale define and a comment as to what to do about it'''
+        return {
+            'HAL_NO_GCS': 'HAL_NO_GCS is no longer used; try "define HAL_GCS_ENABLED 0"',
+            'HAL_NO_LOGGING': 'HAL_NO_LOGGING is no longer used; try "define HAL_LOGGING_ENABLED 0"',
+            'HAL_NO_UARTDRIVER': 'HAL_NO_UARTDRIVER is no longer used; try "define AP_HAL_UARTDRIVER_ENABLED 0"',
+            'HAL_DISABLE_LOOP_DELAY': 'HAL_DISABLE_LOOP_DELAY is no longer used; try "define HAL_SCHEDULER_LOOP_DELAY_ENABLED 0"',  # noqa:E501
+        }
+
+    def assert_good_define(self, name):
+        if name in self.stale_defines:
+            self.error(self.stale_defines[name])
+
     def process_line_define(self, line, depth, a):
+        # defines are currently written out a little haphazardly, but
+        # we do the sanity checks here:
+        result = re.match(r'define\s*([A-Z_0-9]+)\s*', line)
+        if result is not None:
+            # ensure that stale defines aren't introduced into hwdef files:
+            name = result.group(1)
+            self.assert_good_define(name)
+
         # extract numerical defines for processing by other parts of the script
         result = re.match(r'define\s*([A-Z_0-9]+)\s+([0-9]+)', line)
         if result:
@@ -378,6 +415,18 @@ class HWDef:
             f.write(f"#undef AP_BARO_{driver}_ENABLED\n#define AP_BARO_{driver}_ENABLED 1\n")
         if len(devlist) > 0:
             f.write('#define HAL_BARO_PROBE_LIST %s\n\n' % ';'.join(devlist))
+
+    def write_device_table(self, f, description, define_name, devlist):
+        '''writes out a #define which can be used as the body of a C
+        structure to populate object constructor arguments'''
+        if len(devlist) == 0:
+            f.write(f'\n// No {description}\n')
+            return
+
+        f.write(f'\n// {description} table\n')
+        f.write(f'#define {define_name} \\\n')
+        f.write(',\\\n'.join([f"   {x}" for x in devlist]))
+        f.write("\n")
 
     def write_env_py(self, filename):
         '''write out env.py for environment variables to control the build process'''

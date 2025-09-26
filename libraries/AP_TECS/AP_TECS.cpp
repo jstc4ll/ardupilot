@@ -618,7 +618,7 @@ void AP_TECS::_update_height_demand(void)
 
         if (!_flare_initialised) {
             _flare_hgt_dem_adj = _hgt_dem;
-            _flare_hgt_dem_ideal = _hgt_afe;
+            _flare_hgt_dem_ideal = _height;
             _hgt_at_start_of_flare = _hgt_afe;
             _hgt_rate_at_flare_entry = _climb_rate;
             _flare_initialised = true;
@@ -641,9 +641,6 @@ void AP_TECS::_update_height_demand(void)
 
         // fade across to the ideal height profile
         _hgt_dem = _flare_hgt_dem_adj * (1.0f - p) + _flare_hgt_dem_ideal * p;
-
-        // correct for offset between height above ground and height above datum used by control loops
-        _hgt_dem += (_hgt_afe - _height);
     }
 }
 
@@ -836,21 +833,24 @@ void AP_TECS::_update_throttle_with_airspeed(void)
             // @Field: I: integrator state for throttle
             // @Field: Emin: lower limit for potential energy error
             // @Field: Emax: upper limit for potential energy error
-            AP::logger().WriteStreaming("TEC3","TimeUS,KED,PED,KEDD,PEDD,TEE,TEDE,FFT,Imin,Imax,I,Emin,Emax",
-                                        "Qffffffffffff",
-                                        AP_HAL::micros64(),
-                                        (double)_SKEdot,
-                                        (double)_SPEdot,
-                                        (double)_SKEdot_dem,
-                                        (double)_SPEdot_dem,
-                                        (double)_STE_error,
-                                        (double)STEdot_error,
-                                        (double)ff_throttle,
-                                        (double)integ_min,
-                                        (double)integ_max,
-                                        (double)_integTHR_state,
-                                        (double)SPE_err_min,
-                                        (double)SPE_err_max);
+            AP::logger().WriteStreaming(
+                "TEC3",
+                "TimeUS," "KED," "PED," "KEDD," "PEDD," "TEE," "TEDE," "FFT," "Imin," "Imax," "I," "Emin," "Emax",
+                "Q"       "f"    "f"    "f"     "f"     "f"    "f"     "f"    "f"     "f"     "f"  "f"     "f",
+                AP_HAL::micros64(),
+                (double)_SKEdot,
+                (double)_SPEdot,
+                (double)_SKEdot_dem,
+                (double)_SPEdot_dem,
+                (double)_STE_error,
+                (double)STEdot_error,
+                (double)ff_throttle,
+                (double)integ_min,
+                (double)integ_max,
+                (double)_integTHR_state,
+                (double)SPE_err_min,
+                (double)SPE_err_max
+            );
         }
         // @LoggerMessage: TEC4
         // @Vehicles: Plane

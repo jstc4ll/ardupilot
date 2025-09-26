@@ -16,15 +16,6 @@ sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '../..
 from pysim.vehicleinfo import VehicleInfo # noqa: E402
 
 
-vehicle_hwdefs_to_skip = set([
-    'KakuteF4Mini',
-    'SPRacingH7RF',
-    'SkystarsH7HD',
-    'Swan-K1',
-    'skyviper-journey',
-    'skyviper-v2450',
-])
-
 periph_hwdefs_to_skip = set([ # Most of these fail due to NET_ params
     'BotBloxDroneNet',
     'CubeNode-ETH',
@@ -77,7 +68,7 @@ frame_params_to_skip = set([
 ])
 
 
-VEHICLE_BOARDS = BoardList().find_autobuild_boards(skip=vehicle_hwdefs_to_skip)
+VEHICLE_BOARDS = BoardList().find_autobuild_boards(skip=set())
 PERIPH_BOARDS = BoardList().find_ap_periph_boards(skip=periph_hwdefs_to_skip)
 
 # List of all firmware that isn't AP_Periph

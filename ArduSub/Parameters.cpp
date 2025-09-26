@@ -99,8 +99,8 @@ const AP_Param::Info Sub::var_info[] = {
 #if AP_SUB_RC_ENABLED        
     // @Param: FS_THR_ENABLE
     // @DisplayName: Throttle Failsafe Enable
-    // @Description: The throttle failsafe allows you to configure a software failsafe activated by a setting on the throttle input channel
-    // @Values:  0:Disabled,1: Warn only but prevent arming,2:Surface on throttle failsafe 
+    // @Description: The throttle failsafe allows you to configure a software RC failsafe activated by a setting on the throttle input channel. It also enables RC failsafe on absence of RC signals being recieved.
+    // @Values:  0:Disabled,1: Force effective control inputs to trim positions and prevent arming,2:Surface and hold on surface on failsafe 
     // @User: Standard
     GSCALAR(failsafe_throttle,  "FS_THR_ENABLE",   0),
 
@@ -708,12 +708,6 @@ const AP_Param::Info Sub::var_info[] = {
     GOBJECT(osd, "OSD", AP_OSD),
 #endif
 
-#if AP_RPM_ENABLED
-    // @Group: RPM
-    // @Path: ../libraries/AP_RPM/AP_RPM.cpp
-    GOBJECT(rpm_sensor, "RPM", AP_RPM),
-#endif
-
 #if AP_RSSI_ENABLED
     // @Group: RSSI_
     // @Path: ../libraries/AP_RSSI/AP_RSSI.cpp
@@ -834,6 +828,11 @@ void Sub::load_parameters()
     // PARAMETER_CONVERSION - Added: Mar-2022
 #if AP_FENCE_ENABLED
     AP_Param::convert_class(g.k_param_fence_old, &fence, fence.var_info, 0, true);
+#endif
+
+    // PARAMETER_CONVERSION - Added: July-2025 for ArduPilot-4.7
+#if AP_RPM_ENABLED
+    AP_Param::convert_class(g.k_param_rpm_sensor_old, &rpm_sensor, rpm_sensor.var_info, 0, true, true);
 #endif
 
     static const AP_Param::G2ObjectConversion g2_conversions[] {

@@ -569,6 +569,11 @@ function SocketAPM_ud:send(str, len) end
 ---@return integer
 function SocketAPM_ud:sendto(str, len, ipaddr, port) end
 
+-- return true if a socket is in a pending connect state
+-- used for non-blocking TCP connections
+---@return boolean
+function SocketAPM_ud:is_pending() end
+
 -- bind to an address. Use "0.0.0.0" for wildcard bind
 ---@param IP_address string
 ---@param port integer
@@ -1283,6 +1288,10 @@ function AP_HAL__I2CDevice_ud:set_retries(retries) end
 -- Serial port access object
 ---@class (exact) AP_Scripting_SerialAccess_ud
 local AP_Scripting_SerialAccess_ud = {}
+
+-- Set UART use unbuffered writes flag, false by default (no effect for device ports)
+---@param on boolean
+function AP_Scripting_SerialAccess_ud:set_unbuffered_writes(on) end
 
 -- Start serial port with the given baud rate (no effect for device ports)
 ---@param baud_rate uint32_t_ud|integer|number
@@ -2397,7 +2406,7 @@ function esc_telem:get_rpm(instance) end
 
 -- update RPM for an ESC
 ---@param esc_index integer -- esc instance 0 indexed
----@param rpm integer -- RPM
+---@param rpm number -- RPM
 ---@param error_rate number -- error rate
 function esc_telem:update_rpm(esc_index, rpm, error_rate) end
 
@@ -2906,6 +2915,11 @@ gcs = {}
 ---@param name string -- up to 10 chars long
 ---@param value number -- value to send
 function gcs:send_named_float(name, value) end
+
+-- send named string value using NAMED_VALUE_STRING message
+---@param name string -- up to 10 chars long
+---@param value string -- value to send, up to 64 chars long
+function gcs:send_named_string(name, value) end
 
 -- set message interval for a given serial port and message id
 ---@param port_num integer -- serial port number
@@ -3455,6 +3469,10 @@ function gps:primary_sensor() end
 ---@return integer -- number of sensors
 function gps:num_sensors() end
 
+-- Inject a packet of raw binary to a GPS (e.g., RTCM3)
+---@param data string -- binary data to inject
+function gps:inject_data(data) end
+
 -- desc
 ---@class (exact) BattMonitorScript_State_ud
 local BattMonitorScript_State_ud = {}
@@ -3954,7 +3972,7 @@ function mavlink:receive_chan() end
 ---@param chan integer
 ---@param msgid integer
 ---@param message string
----@return boolean -- success
+---@return boolean|nil -- True if send was successful, false if send was not successful, nil if channel does not exist
 function mavlink:send_chan(chan, msgid, message) end
 
 -- Block a given MAV_CMD from being processed by ArduPilot
@@ -3997,6 +4015,13 @@ function fence:get_margin_breaches() end
 ---| 8 # Minimum altitude
 ---@return number -- distance
 function fence:get_breach_distance(fence_type) end
+
+-- Rally library
+rally = {}
+-- Returns a specfic rally by index as a Location 
+---@param index integer -- 0 indexed
+---@return Location_ud|nil
+function rally:get_rally_location(index) end
 
 -- desc
 ---@class (exact) stat_t_ud
@@ -4093,6 +4118,14 @@ function networking:get_netmask_active() end
 -- desc
 ---@return uint32_t_ud
 function networking:get_ip_active() end
+
+-- add a custom ipv4 route
+---@param backend_idx integer -- backend index
+---@param iface_idx integer -- interface index
+---@param dest_ip uint32_t_ud|integer|number -- desttination IP address
+---@param mask_len integer -- network mask bit length
+---@return boolean
+function networking:add_route(backend_idx, iface_idx, dest_ip, mask_len) end
 
 -- visual odometry object
 visual_odom = {}

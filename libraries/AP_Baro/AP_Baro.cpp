@@ -601,9 +601,6 @@ void AP_Baro::init(void)
     case AP_BoardConfig::PX4_BOARD_PHMINI:
     case AP_BoardConfig::PX4_BOARD_AUAV21:
     case AP_BoardConfig::PX4_BOARD_PH2SLIM:
-    case AP_BoardConfig::VRX_BOARD_CORE10:
-    case AP_BoardConfig::VRX_BOARD_UBRAIN51:
-    case AP_BoardConfig::VRX_BOARD_UBRAIN52:
     case AP_BoardConfig::PX4_BOARD_FMUV5:
     case AP_BoardConfig::PX4_BOARD_FMUV6:
 #if AP_BARO_MS5611_ENABLED
@@ -613,7 +610,6 @@ void AP_Baro::init(void)
         break;
 
     case AP_BoardConfig::PX4_BOARD_PIXHAWK2:
-    case AP_BoardConfig::PX4_BOARD_SP01:
 #if AP_BARO_MS5611_ENABLED
         ADD_BACKEND(AP_Baro_MS5611::probe(*this,
                                           std::move(hal.spi->get_device(HAL_BARO_MS5611_SPI_EXT_NAME))));

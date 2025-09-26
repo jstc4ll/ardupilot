@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # flake8: noqa
 
@@ -129,11 +129,13 @@ baro_types = {
     0x0F : "DEVTYPE_BARO_ICP101XX",
     0x10 : "DEVTYPE_BARO_ICP201XX",
     0x11 : "DEVTYPE_BARO_MS5607",
-    0x12 : "DEVTYPE_BARO_MS5837",
+    0x12 : "DEVTYPE_BARO_MS5837_30BA",
     0x13 : "DEVTYPE_BARO_MS5637",
     0x14 : "DEVTYPE_BARO_BMP390",
     0x15 : "DEVTYPE_BARO_BMP581",
     0x16 : "DEVTYPE_BARO_SPA06",
+    0x17 : "DEVTYPE_BARO_AUAV",
+    0x18 : "DEVTYPE_BARO_MS5837_02BA",
 }
 
 airspeed_types = {
@@ -147,8 +149,9 @@ airspeed_types = {
     0x08 : "DEVTYPE_AIRSPEED_ANALOG",
     0x09 : "DEVTYPE_AIRSPEED_NMEA",
     0x0A : "DEVTYPE_AIRSPEED_ASP5033",
+    0x0B : "DEVTYPE_AIRSPEED_AUAV",
 }
-    
+
 decoded_devname = ""
 
 if opts.compass:
